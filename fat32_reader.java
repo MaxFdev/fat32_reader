@@ -3,7 +3,9 @@ import java.util.Scanner;
 
 public class fat32_reader {
 
-    private static boolean fileExists = true;
+    // ! program startup
+
+    private static File fat32;
 
     public static void main(String[] args) {
         // check for one arg
@@ -11,34 +13,26 @@ public class fat32_reader {
             throw new IllegalArgumentException("Requires 1 arg, ie: java fat32_reader <fat32.img>");
         }
 
-        // make a file reader
-        fat32_reader fsReader = new fat32_reader(args[0]);
+        // get the file
+        fat32 = new File(args[0]);
 
         // check that the file exists
-        if (!fileExists) {
+        if (!fat32.exists()) {
             throw new IllegalArgumentException("Arg: <" + args[0] + "> not valid file name!");
         }
 
-        // start the file reader
-        fsReader.start();
+        // get the file system specs
+        saveSpecs();
+
+        // start scanning input
+        scanInput();
     }
 
-    private final File fat32;
+    // ! file system specifications
 
-    private fat32_reader(String fileName) {
-        // open the file
-        this.fat32 = new File(fileName);
+    private static byte[] a;
 
-        // check that the file exists
-        if (!this.fat32.exists()) {
-            fat32_reader.fileExists = false; // TODO does this work?
-        }
+    private static void saveSpecs() {}
 
-        // call to get the file system specifications
-        scanSpecs();
-    }
-
-    private void scanSpecs() {}
-
-    private void start() {}
+    private static void scanInput() {}
 }
