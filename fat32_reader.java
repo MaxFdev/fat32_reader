@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
 import java.util.Scanner;
 
 public class fat32_reader {
@@ -6,6 +8,7 @@ public class fat32_reader {
     // ! program startup
 
     private static File fat32;
+    private static RandomAccessFile fs;
 
     public static void main(String[] args) {
         // check for one arg
@@ -21,6 +24,14 @@ public class fat32_reader {
             throw new IllegalArgumentException("Arg: <" + args[0] + "> not valid file name!");
         }
 
+        // set up the file access
+        try {
+            // try to get read only access
+            fs = new RandomAccessFile(fat32, "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
         // get the file system specs
         saveSpecs();
 
@@ -30,9 +41,9 @@ public class fat32_reader {
 
     // ! file system specifications
 
-    private static byte[] a;
-
     private static void saveSpecs() {}
+
+    // ! take commands input
 
     private static void scanInput() {}
 }
