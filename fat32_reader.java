@@ -7,7 +7,6 @@ public class fat32_reader {
 
     // ! program startup
 
-    private static File fat32;
     private static RandomAccessFile fs;
 
     public static void main(String[] args) {
@@ -17,7 +16,7 @@ public class fat32_reader {
         }
 
         // get the file
-        fat32 = new File(args[0]);
+        File fat32 = new File(args[0]);
 
         // check that the file exists
         if (!fat32.exists()) {
