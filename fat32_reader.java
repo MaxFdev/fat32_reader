@@ -84,13 +84,13 @@ public class fat32_reader {
                 printInfo();
             } else if (input.equals("ls")) {
                 listDirectory();
-            } else if (input.equals("stat")) {
+            } else if (input.startsWith("stat")) {
                 // TODO stat
-            } else if (input.equals("size")) {
+            } else if (input.startsWith("size")) {
                 // TODO size
-            } else if (input.equals("cd")) {
+            } else if (input.startsWith("cd")) {
                 // TODO cd
-            } else if (input.equals("read")) {
+            } else if (input.startsWith("read")) {
                 // TODO read
             } else {
                 System.out.println("Invalid command!"); // TODO what to print for errors
@@ -104,7 +104,16 @@ public class fat32_reader {
     // ! print info
 
     private static void printInfo() {
-        // TODO print info
+        System.out.println("BPB_BytesPerSec is 0x" + Integer.toHexString(BPB_BytesPerSec) + ", "
+                + BPB_BytesPerSec);
+        System.out.println("BPB_SecPerClus is 0x" + Integer.toHexString(BPB_SecPerClus) + ", "
+                + BPB_SecPerClus);
+        System.out.println("BPB_RsvdSecCnt is 0x" + Integer.toHexString(BPB_RsvdSecCnt) + ", "
+                + BPB_RsvdSecCnt);
+        System.out.println(
+                "BPB_NumFATS is 0x" + Integer.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
+        System.out.println(
+                "BPB_FATSz32 is 0x" + Integer.toHexString(BPB_FATSz32) + ", " + BPB_FATSz32);
     }
 
     // ! list directory
