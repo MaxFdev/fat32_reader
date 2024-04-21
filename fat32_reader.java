@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Scanner;
@@ -28,12 +27,15 @@ public class fat32_reader {
         try {
             // try to get read only access
             fs = new RandomAccessFile(fat32, "r");
-        } catch (FileNotFoundException e) {
+
+            // get the file system specs
+            saveSpecs();
+
+            // close the file system
+            fs.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // get the file system specs
-        saveSpecs();
     }
 
     // ! file system specifications
@@ -45,6 +47,7 @@ public class fat32_reader {
     private static int BPB_FATSz32;
 
     private static void saveSpecs() {
+        // try to seek and find the fs specs
         try {
             fs.seek(11);
             BPB_BytesPerSec = Short.reverseBytes(fs.readShort());
@@ -54,16 +57,59 @@ public class fat32_reader {
             BPB_NumFATS = fs.read();
             fs.seek(36);
             BPB_FATSz32 = Integer.reverseBytes(fs.readInt());
+
+            // start scanning input
+            scanInput();
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
-
-        // start scanning input
-        scanInput();
     }
 
     // ! take commands input
 
-    private static void scanInput() {}
+    private static String workingDirectory = "/";
+
+    private static void scanInput() {
+        Scanner scanner = new Scanner(System.in);
+        boolean run = true;
+        String input;
+
+        while (run) {
+            System.out.print(workingDirectory + "] ");
+            input = scanner.nextLine();
+
+            if (input.equals("stop")) {
+                run = false;
+            } else if (input.equals("info")) {
+                printInfo();
+            } else if (input.equals("ls")) {
+                listDirectory();
+            } else if (input.equals("stat")) {
+                // TODO stat
+            } else if (input.equals("size")) {
+                // TODO size
+            } else if (input.equals("cd")) {
+                // TODO cd
+            } else if (input.equals("read")) {
+                // TODO read
+            } else {
+                System.out.println("Invalid command!"); // TODO what to print for errors
+            }
+        }
+
+        // close the scanner before exiting
+        scanner.close();
+    }
+
+    // ! print info
+
+    private static void printInfo() {
+        // TODO print info
+    }
+
+    // ! list directory
+
+    private static void listDirectory() {
+        // TODO list directory
+    }
 }
