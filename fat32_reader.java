@@ -58,6 +58,9 @@ public class fat32_reader {
             fs.seek(36);
             BPB_FATSz32 = Integer.reverseBytes(fs.readInt());
 
+            // navigate to root cluster
+            navigateRoot();
+
             // start scanning input
             scanInput();
         } catch (IOException e) {
@@ -65,9 +68,19 @@ public class fat32_reader {
         }
     }
 
-    // ! take commands input
+    // ! navigate to root cluster
 
-    private static String workingDirectory = "/";
+    private static String workingDirectory;
+    private static long currentCluster;
+
+    private static void navigateRoot() {
+        // set the working directory to root
+        workingDirectory = "/";
+
+        // TODO finish navigating to root cluster (set the current cluster)
+    }
+
+    // ! take commands input
 
     private static void scanInput() {
         Scanner scanner = new Scanner(System.in);
@@ -84,16 +97,18 @@ public class fat32_reader {
                 printInfo();
             } else if (input.equals("ls")) {
                 listDirectory();
-            } else if (input.startsWith("stat")) {
-                // TODO stat
-            } else if (input.startsWith("size")) {
-                // TODO size
-            } else if (input.startsWith("cd")) {
-                // TODO cd
-            } else if (input.startsWith("read")) {
-                // TODO read
+            } else if (input.startsWith("stat ")) {
+                // TODO does the substring work?
+                getStats(input.substring(input.indexOf(" ") + 1));
+            } else if (input.startsWith("size ")) {
+                getSize(input.substring(input.indexOf(" ") + 1));
+            } else if (input.startsWith("cd ")) {
+                changeDirectory(input.substring(input.indexOf(" ") + 1));
+            } else if (input.startsWith("read ")) {
+                readFile(input.substring(input.indexOf(" ") + 1));
             } else {
-                System.out.println("Invalid command!"); // TODO what to print for errors
+                // TODO what to print for errors
+                System.out.println("Invalid command!");
             }
         }
 
@@ -120,5 +135,29 @@ public class fat32_reader {
 
     private static void listDirectory() {
         // TODO list directory
+    }
+
+    // ! get file or directory stats
+
+    private static void getStats(String name) {
+        // TODO get stats
+    }
+
+    // ! get file size
+
+    private static void getSize(String name) {
+        // TODO get size
+    }
+
+    // ! change directory
+
+    private static void changeDirectory(String name) {
+        // TODO change directory
+    }
+
+    // ! read file
+
+    private static void readFile(String name) {
+        // TODO read file
     }
 }

@@ -59,7 +59,7 @@ are characters in those last three bytes.
 ### TODO
 
 - ~~stop~~
-- info
+- ~~info~~
 - ls
 - stat
 - size
