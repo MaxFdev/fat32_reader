@@ -30,7 +30,7 @@ javac *.java
 java fat32_reader fat32.img < inputcommands.txt > readeroutput.tx
 ```
 
-EOF: To indicate end-of-file, the entry in the FAT can be any value from 0x0FFFFFF8 to 0x0FFFFFFF
+EOF: To indicate end-of-file, the entry in the FAT can be any value from 0x0FFFFFF8 to 0x0FFFFFFF (>=0x0FFFFFF8)
 
 Short file names: short file names are 1 byte per character in ASCII / UTF-8 encoding
 

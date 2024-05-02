@@ -151,13 +151,13 @@ public class fat32_reader {
 
     // ! change directory
 
-    private static void changeDirectory(String name) {
+    private static void changeDirectory(String dir) {
         // TODO change directory
     }
 
     // ! read file
 
-    private static void readFile(String name) {
+    private static void readFile(String args) {
         // TODO read file
     }
 }
