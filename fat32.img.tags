@@ -28,5 +28,11 @@
         "to": 16383,
         "color": "pink",
         "caption": "RSVD"
+    },
+    {
+        "from": 1096704,
+        "to": 1096735,
+        "color": "lime",
+        "caption": "Dir."
     }
 ]
