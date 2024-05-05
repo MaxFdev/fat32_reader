@@ -131,7 +131,6 @@ public class fat32_reader {
                 printInfo();
             } else if (input.equals("LS")) {
                 listDirectory();
-                // TODO make sure all the following are case insensitive
             } else if (input.startsWith("STAT ")) {
                 // TODO does the substring work?
                 getStats(input.substring(input.indexOf(" ") + 1));
@@ -141,7 +140,7 @@ public class fat32_reader {
                 changeDirectory(input.substring(input.indexOf(" ") + 1));
             } else if (input.startsWith("READ ")) {
                 readFile(input.substring(input.indexOf(" ") + 1));
-            } else {
+            } else if (!input.isBlank()) {
                 // TODO what to print for errors
                 System.out.println("Invalid command!");
             }
@@ -220,7 +219,40 @@ public class fat32_reader {
     // ! change directory
 
     private static void changeDirectory(String dir) {
-        // TODO change directory
+        // check for current directory
+        if (dir.equals(".")) {
+            return;
+        }
+
+        // check for parent directory from root
+        if (dir.equals("..") && currentLocationByte == root) {
+            return;
+        }
+
+        // check if the directory is in the current directory
+        List<String> entries = getEntries();
+        if (!entries.contains(dir)) {
+            System.out.println("Error: " + dir + " is not a directory");
+            return;
+        }
+
+        // get the entry of the directory
+        long entryOfDir = entryMap.get(dir);
+
+        // check if the entry is a directory
+        if (!isDir(entryOfDir)) {
+            System.out.println("Error: " + dir + " is not a directory");
+            return;
+        }
+
+        // get the first cluster of the directory
+        long firstCluster = getFirstCluster(entryOfDir);
+
+        // navigate to the cluster
+        navigateToCluster(firstCluster);
+
+        // set the working directory
+        setWorkingDirectory(dir);
     }
 
     // ! read file
@@ -240,9 +272,11 @@ public class fat32_reader {
         // make a list for all the entries
         List<String> entries = new ArrayList<String>();
 
-        // add the current and parent directory
-        entries.add(".");
-        entries.add("..");
+        // add the current and parent directory if in root
+        if (currentLocationByte == root) {
+            entries.add(".");
+            entries.add("..");
+        }
 
         // read the entries
         try {
@@ -257,9 +291,13 @@ public class fat32_reader {
             // keep track of the current entry being looked at
             int entry = 0;
 
+            // find the entry limit based on cluster size
+            int entryLimit = BPB_BytesPerSec * BPB_SecPerClus / 32;
+
             // TODO also check if the end of the cluster is reached (if so check if there is
             // another cluster to go to)
-            while (startByte != 0) {
+            // TODO if there are more clusters then also add them to the list
+            while (startByte != 0 && entry < entryLimit) {
                 if (!(startByte == 65 && attributeByte == 15) && startByte != 229
                         && attributeByte != 8) {
                     // build the entry name
@@ -339,5 +377,81 @@ public class fat32_reader {
         }
 
         return size;
+    }
+
+    private static boolean isDir(long entry) {
+        // check if the entry is a directory
+        boolean isDir = false;
+
+        try {
+            fs.seek(entry + 11);
+            int attribute = fs.read();
+
+            if ((attribute & 0x10) == 0x10) {
+                isDir = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return isDir;
+    }
+
+    private static long getFirstCluster(long entry) {
+        // build the first cluster
+        long firstCluster = 0;
+
+        try {
+            // read first cluster high bytes
+            fs.seek(entry + 20);
+            int h1 = fs.read();
+            int h2 = fs.read();
+
+            int high = (h2 << 8) | h1;
+
+            // read first cluster low bytes
+            fs.seek(entry + 26);
+            int l1 = fs.read();
+            int l2 = fs.read();
+
+            int low = (l2 << 8) | l1;
+
+            // build the first cluster
+            firstCluster = (high << 16) | low;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return firstCluster;
+    }
+
+    private static void navigateToCluster(long cluster) {
+        // check if the cluster is root
+        if (cluster == 0) { // TODO is this right?
+            currentLocationByte = root;
+        } else {
+            // set the current location byte
+            currentLocationByte = (cluster - 2) * (BPB_SecPerClus * BPB_BytesPerSec) + dataRegOffset;
+        }
+    }
+
+    private static void setWorkingDirectory(String dir) {
+        // check if the directory is a parent
+        if (dir.equals("..")) {
+            // remove the last directory
+            workingDirectory = workingDirectory.substring(0, workingDirectory.lastIndexOf("/"));
+
+            // check if the working directory is root
+            if (workingDirectory.equals("")) {
+                workingDirectory = "/";
+            }
+        } else {
+            // check if the working directory is root
+            if (workingDirectory.equals("/")) {
+                workingDirectory += dir;
+            } else {
+                workingDirectory += "/" + dir;
+            }
+        }
     }
 }
