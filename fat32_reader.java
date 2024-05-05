@@ -203,8 +203,8 @@ public class fat32_reader {
         // get all the entries in the current directory
         List<String> entries = getEntries();
 
-        // check if the name is in the entries
-        if (!entries.contains(name)) {
+        // check that the name is in entries and is not a directory
+        if (!entries.contains(name) || isDir(entryMap.get(name))) {
             System.out.println("Error: " + name + " is not a file");
             return;
         }
