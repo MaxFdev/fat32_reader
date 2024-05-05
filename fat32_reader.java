@@ -288,10 +288,8 @@ public class fat32_reader {
             
             // keep track if there are more clusters
             boolean moreClusters = true;
-            
-            // TODO also check if the end of the cluster is reached (if so check if there is
-            // another cluster to go to)
-            // TODO if there are more clusters then also add them to the list
+
+            // check all the clusters
             while (moreClusters) {
                 // get the starting byte
                 fs.seek(currentCluster);
@@ -476,7 +474,7 @@ public class fat32_reader {
 
     private static void navigateToCluster(long cluster) {
         // check if the cluster is root
-        if (cluster == 0) { // TODO is this right?
+        if (cluster == 0) {
             currentLocationByte = root;
         } else {
             // set the current location byte
