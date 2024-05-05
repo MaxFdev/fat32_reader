@@ -1,1 +1,32 @@
-[{"from":1049600,"to":1050463,"color":"green","caption":"root"}]
+[
+    {
+        "from": 1049600,
+        "to": 1050463,
+        "color": "green",
+        "caption": "root"
+    },
+    {
+        "from": 16384,
+        "to": 532991,
+        "color": "aqua",
+        "caption": "FAT"
+    },
+    {
+        "from": 532992,
+        "to": 1049600,
+        "color": "purple",
+        "caption": "FAT2"
+    },
+    {
+        "from": 0,
+        "to": 89,
+        "color": "red",
+        "caption": "Boot"
+    },
+    {
+        "from": 90,
+        "to": 16383,
+        "color": "pink",
+        "caption": "RSVD"
+    }
+]
