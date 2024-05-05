@@ -60,8 +60,8 @@ are characters in those last three bytes.
 
 - ~~stop~~
 - ~~info~~
-- ls
+- ~~ls~~
 - stat
-- size
-- cd
-- read
+- ~~size~~
+- ~~cd~~
+- ~~read~~
