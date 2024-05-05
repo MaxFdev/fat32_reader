@@ -280,73 +280,92 @@ public class fat32_reader {
 
         // read the entries
         try {
-            // get the starting byte
-            fs.seek(currentLocationByte);
-            int startByte = fs.read();
-
-            // get the attribute byte
-            fs.seek(currentLocationByte + 11);
-            int attributeByte = fs.read();
-
-            // keep track of the current entry being looked at
-            int entry = 0;
-
             // find the entry limit based on cluster size
             int entryLimit = BPB_BytesPerSec * BPB_SecPerClus / 32;
-
+            
+            // keep track of the cluster being traversed
+            long currentCluster = currentLocationByte;
+            
+            // keep track if there are more clusters
+            boolean moreClusters = true;
+            
             // TODO also check if the end of the cluster is reached (if so check if there is
             // another cluster to go to)
             // TODO if there are more clusters then also add them to the list
-            while (startByte != 0 && entry < entryLimit) {
-                if (!(startByte == 65 && attributeByte == 15) && startByte != 229
-                        && attributeByte != 8) {
-                    // build the entry name
-                    StringBuilder entryName = new StringBuilder();
+            while (moreClusters) {
+                // get the starting byte
+                fs.seek(currentCluster);
+                int startByte = fs.read();
+    
+                // get the attribute byte
+                fs.seek(currentCluster + 11);
+                int attributeByte = fs.read();
 
-                    // read the name
-                    for (int i = 0; i < 8; i++) {
-                        fs.seek(currentLocationByte + 32 * entry + i);
-                        char nameChar = (char) fs.read();
-                        if (isPrintableChar(nameChar) && nameChar != ' ') {
-                            entryName.append(nameChar);
-                        }
-                    }
+                // keep track of the current entry being looked at
+                int entry = 0;
 
-                    // read the extension
-                    fs.seek(currentLocationByte + 32 * entry + 8);
-                    char extensionChar = (char) fs.read();
+                // check if the entry limit is reached or if there is a 0 byte
+                while (startByte != 0 && entry < entryLimit) {
+                    if (!(startByte == 65 && attributeByte == 15) && startByte != 229
+                            && attributeByte != 8) {
+                        // build the entry name
+                        StringBuilder entryName = new StringBuilder();
 
-                    // check if the extension is valid
-                    if (isPrintableChar(extensionChar) && extensionChar != ' ') {
-                        entryName.append(".");
-                        entryName.append(extensionChar);
-
-                        // finish the extension
-                        for (int i = 1; i < 3; i++) {
-                            extensionChar = (char) fs.read();
-                            if (isPrintableChar(extensionChar) && extensionChar != ' ') {
-                                entryName.append(extensionChar);
+                        // read the name
+                        for (int i = 0; i < 8; i++) {
+                            fs.seek(currentCluster + 32 * entry + i);
+                            char nameChar = (char) fs.read();
+                            if (isPrintableChar(nameChar) && nameChar != ' ') {
+                                entryName.append(nameChar);
                             }
                         }
+
+                        // read the extension
+                        fs.seek(currentCluster + 32 * entry + 8);
+                        char extensionChar = (char) fs.read();
+
+                        // check if the extension is valid
+                        if (isPrintableChar(extensionChar) && extensionChar != ' ') {
+                            entryName.append(".");
+                            entryName.append(extensionChar);
+
+                            // finish the extension
+                            for (int i = 1; i < 3; i++) {
+                                extensionChar = (char) fs.read();
+                                if (isPrintableChar(extensionChar) && extensionChar != ' ') {
+                                    entryName.append(extensionChar);
+                                }
+                            }
+                        }
+
+                        // add the entry to the map
+                        entryMap.put(entryName.toString(), currentCluster + 32 * entry);
+
+                        // add the entry to the list
+                        entries.add(entryName.toString());
                     }
 
-                    // add the entry to the map
-                    entryMap.put(entryName.toString(), currentLocationByte + 32 * entry);
+                    // increment the entry
+                    entry++;
 
-                    // add the entry to the list
-                    entries.add(entryName.toString());
+                    // get the next starting byte
+                    fs.seek(currentCluster + 32 * entry);
+                    startByte = fs.read();
+
+                    // get the next attribute byte
+                    fs.seek(currentCluster + 32 * entry + 11);
+                    attributeByte = fs.read();
                 }
 
-                // increment the entry
-                entry++;
+                // check if there are more clusters
+                long FATEntry = checkFATForNext(currentCluster);
 
-                // get the next starting byte
-                fs.seek(currentLocationByte + 32 * entry);
-                startByte = fs.read();
-
-                // get the next attribute byte
-                fs.seek(currentLocationByte + 32 * entry + 11);
-                attributeByte = fs.read();
+                if (FATEntry >= 0x0FFFFFF8) {
+                    moreClusters = false;
+                } else {
+                    // get the next cluster byte
+                    currentCluster = getByteAddressOfNextCluster(FATEntry);
+                }
             }
 
         } catch (IOException e) {
@@ -357,6 +376,36 @@ public class fat32_reader {
         Collections.sort(entries);
 
         return entries;
+    }
+
+    private static long checkFATForNext(long byteLocation) {
+        // get the cluster number
+        long clusterNumber = getClusterNumber(byteLocation);
+
+        // get the FAT entry
+        long FATEntry = 0;
+
+        try {
+            // get the FAT entry
+            fs.seek(FATstart + clusterNumber * 4);
+            FATEntry = Integer.reverseBytes(fs.readInt());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return FATEntry;
+    }
+
+    private static long getByteAddressOfNextCluster(long FATEntry) {
+        // convert the FAT entry to a byte address
+        long nextClusterByte = (FATEntry - 2) * (BPB_SecPerClus * BPB_BytesPerSec) + dataRegOffset;
+
+        return nextClusterByte;
+    }
+
+    private static long getClusterNumber(long byteLocation) {
+        // get the cluster number
+        return ((byteLocation - dataRegOffset) / (BPB_SecPerClus * BPB_BytesPerSec) + 2);
     }
 
     private static boolean isPrintableChar(char c) {
@@ -431,7 +480,8 @@ public class fat32_reader {
             currentLocationByte = root;
         } else {
             // set the current location byte
-            currentLocationByte = (cluster - 2) * (BPB_SecPerClus * BPB_BytesPerSec) + dataRegOffset;
+            currentLocationByte = (cluster - 2) * (BPB_SecPerClus * BPB_BytesPerSec)
+                    + dataRegOffset;
         }
     }
 
