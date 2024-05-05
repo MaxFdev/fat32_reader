@@ -49,6 +49,7 @@ public class fat32_reader {
     private static void saveSpecs() {
         // try to seek and find the fs specs
         try {
+            // seek and read data
             fs.seek(11);
             BPB_BytesPerSec = Short.reverseBytes(fs.readShort());
             BPB_SecPerClus = fs.read();
@@ -70,15 +71,32 @@ public class fat32_reader {
 
     // ! navigate to root cluster
 
+    private static int BPB_RootClus;
+    private static int dataRegOffset;
+    private static long currentLocationByte;
     private static String workingDirectory;
-    private static long currentCluster;
 
     private static void navigateRoot() {
-        // set the working directory to root
-        workingDirectory = "/";
+        // try to seek and find the root cluster
+        try {
+            // seek and read data
+            fs.seek(44);
+            BPB_RootClus = Integer.reverseBytes(fs.readInt());
 
-        // TODO finish navigating to root cluster (set the current cluster)
+            // set the working directory to root
+            workingDirectory = "/";
+    
+            // navigating to root cluster (set the current cluster)
+            dataRegOffset = (BPB_RsvdSecCnt + BPB_NumFATS * BPB_FATSz32) * BPB_BytesPerSec;
+            currentLocationByte = (BPB_RootClus - 2) * (BPB_SecPerClus * BPB_BytesPerSec) + dataRegOffset;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+    // ! navigate to cluster
+
+    // TODO navigate to cluster method
 
     // ! take commands input
 
