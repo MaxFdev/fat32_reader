@@ -3,7 +3,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class fat32_reader {
@@ -77,6 +79,8 @@ public class fat32_reader {
 
     private static int BPB_RootClus;
     private static int dataRegOffset;
+    private static long FATstart;
+    private static long root;
     private static long currentLocationByte;
     private static String workingDirectory;
 
@@ -94,6 +98,12 @@ public class fat32_reader {
             dataRegOffset = (BPB_RsvdSecCnt + BPB_NumFATS * BPB_FATSz32) * BPB_BytesPerSec;
             currentLocationByte = (BPB_RootClus - 2) * (BPB_SecPerClus * BPB_BytesPerSec)
                     + dataRegOffset;
+
+            // set the FAT start
+            FATstart = BPB_RsvdSecCnt * BPB_BytesPerSec;
+
+            // set the root
+            root = currentLocationByte;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -102,29 +112,34 @@ public class fat32_reader {
     // ! take commands input
 
     private static void scanInput() {
+        // set up the scanner
         Scanner scanner = new Scanner(System.in);
         boolean run = true;
         String input;
 
         while (run) {
+            // print the working directory
             System.out.print(workingDirectory + "] ");
             input = scanner.nextLine();
 
-            if (input.equals("stop")) {
+            // set the input to uppercase
+            input = input.toUpperCase();
+
+            if (input.equals("STOP")) {
                 run = false;
-            } else if (input.equals("info")) {
+            } else if (input.equals("INFO")) {
                 printInfo();
-            } else if (input.equals("ls")) {
+            } else if (input.equals("LS")) {
                 listDirectory();
                 // TODO make sure all the following are case insensitive
-            } else if (input.startsWith("stat ")) {
+            } else if (input.startsWith("STAT ")) {
                 // TODO does the substring work?
                 getStats(input.substring(input.indexOf(" ") + 1));
-            } else if (input.startsWith("size ")) {
+            } else if (input.startsWith("SIZE ")) {
                 getSize(input.substring(input.indexOf(" ") + 1));
-            } else if (input.startsWith("cd ")) {
+            } else if (input.startsWith("CD ")) {
                 changeDirectory(input.substring(input.indexOf(" ") + 1));
-            } else if (input.startsWith("read ")) {
+            } else if (input.startsWith("READ ")) {
                 readFile(input.substring(input.indexOf(" ") + 1));
             } else {
                 // TODO what to print for errors
@@ -171,7 +186,57 @@ public class fat32_reader {
         }
     }
 
+    // ! get file or directory stats
+
+    private static void getStats(String name) {
+        // TODO get stats
+    }
+
+    // ! get file size
+
+    private static void getSize(String name) {
+        // check if the name is valid
+        if (name.equals(".") || name.equals("..")) {
+            System.out.println("Error: " + name + " is not a file");
+            return;
+        }
+
+        // get all the entries in the current directory
+        List<String> entries = getEntries();
+
+        // check if the name is in the entries
+        if (!entries.contains(name)) {
+            System.out.println("Error: " + name + " is not a file");
+            return;
+        }
+
+        // get the size of the file
+        int size = getSizeOfFile(name);
+
+        // print the size
+        System.out.println("Size of " + name + " is " + size + " bytes");
+    }
+
+    // ! change directory
+
+    private static void changeDirectory(String dir) {
+        // TODO change directory
+    }
+
+    // ! read file
+
+    private static void readFile(String args) {
+        // TODO read file
+    }
+
+    // ! helper methods
+
+    private static Map<String, Long> entryMap;
+
     private static List<String> getEntries() {
+        // make a map for all the entry locations
+        entryMap = new HashMap<String, Long>();
+
         // make a list for all the entries
         List<String> entries = new ArrayList<String>();
 
@@ -227,6 +292,9 @@ public class fat32_reader {
                         }
                     }
 
+                    // add the entry to the map
+                    entryMap.put(entryName.toString(), currentLocationByte + 32 * entry);
+
                     // add the entry to the list
                     entries.add(entryName.toString());
                 }
@@ -253,33 +321,23 @@ public class fat32_reader {
         return entries;
     }
 
-    // ! get file or directory stats
-
-    private static void getStats(String name) {
-        // TODO get stats
-    }
-
-    // ! get file size
-
-    private static void getSize(String name) {
-        // TODO get size
-    }
-
-    // ! change directory
-
-    private static void changeDirectory(String dir) {
-        // TODO change directory
-    }
-
-    // ! read file
-
-    private static void readFile(String args) {
-        // TODO read file
-    }
-
-    // ! helper methods
-
     private static boolean isPrintableChar(char c) {
         return c >= 32 && c < 127;
+    }
+
+    private static int getSizeOfFile(String name) {
+        // track size
+        int size = 0;
+
+        // get the size of the file
+        try {
+            // get the location of the entry size
+            fs.seek(entryMap.get(name) + 28);
+            size = Integer.reverseBytes(fs.readInt());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return size;
     }
 }
