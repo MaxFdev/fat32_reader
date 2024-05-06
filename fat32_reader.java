@@ -152,16 +152,21 @@ public class fat32_reader {
     // ! print info
 
     private static void printInfo() {
-        System.out.println("BPB_BytesPerSec is 0x" + Long.toHexString(BPB_BytesPerSec) + ", "
+        System.out.println("BPB_BytesPerSec is 0x" + getHex(BPB_BytesPerSec) + ", "
                 + BPB_BytesPerSec);
-        System.out.println("BPB_SecPerClus is 0x" + Long.toHexString(BPB_SecPerClus) + ", "
+        System.out.println("BPB_SecPerClus is 0x" + getHex(BPB_SecPerClus) + ", "
                 + BPB_SecPerClus);
-        System.out.println("BPB_RsvdSecCnt is 0x" + Long.toHexString(BPB_RsvdSecCnt) + ", "
+        System.out.println("BPB_RsvdSecCnt is 0x" + getHex(BPB_RsvdSecCnt) + ", "
                 + BPB_RsvdSecCnt);
         System.out.println(
-                "BPB_NumFATs is 0x" + Long.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
+                "BPB_NumFATs is 0x" + getHex(BPB_NumFATS) + ", " + BPB_NumFATS);
         System.out.println(
-                "BPB_FATSz32 is 0x" + Long.toHexString(BPB_FATSz32) + ", " + BPB_FATSz32);
+                "BPB_FATSz32 is 0x" + getHex(BPB_FATSz32) + ", " + BPB_FATSz32);
+    }
+
+    
+    private static String getHex(long val) {
+        return Long.toHexString(val);
     }
 
     // ! list directory
@@ -455,7 +460,7 @@ public class fat32_reader {
         try {
             // get the FAT entry
             fs.seek(FATstart + clusterNumber * 4);
-            FATEntry = Integer.reverseBytes(fs.readInt());
+            FATEntry = fs.read() | (fs.read() << 8) | (fs.read() << 16) | (fs.read() << 24);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -487,7 +492,7 @@ public class fat32_reader {
         try {
             // get the location of the entry size
             fs.seek(entryMap.get(name) + 28);
-            size = Integer.reverseBytes(fs.readInt());
+            size = fs.read() | (fs.read() << 8) | (fs.read() << 16) | (fs.read() << 24);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -658,13 +663,13 @@ public class fat32_reader {
             }
 
             // print the hex value
-            System.out.print(Integer.toHexString(val).toUpperCase()); // TODO can tohexstring be used in final
+            System.out.print(Integer.toHexString(val).toUpperCase());
         }
     }
 
     private static void printStatOfEntry(long entryAddress) {
         // keep track of entry size
-        int size = 0;
+        long size = 0;
 
         // keep track of entry attributes
         int attributes = 0;
@@ -676,7 +681,7 @@ public class fat32_reader {
         try {
             // get the location of the entry size
             fs.seek(entryAddress + 28);
-            size = Integer.reverseBytes(fs.readInt());
+            size = fs.read() | (fs.read() << 8) | (fs.read() << 16) | (fs.read() << 24);
 
             // get the attributes of the entry
             fs.seek(entryAddress + 11);
@@ -722,14 +727,6 @@ public class fat32_reader {
     private static List<String> extractAttributes(int attributes) {
         // make a list for the attributes
         List<String> attributeList = new ArrayList<String>();
-
-        // check for reserved bits
-        if ((attributes & 0x80) == 0x80) {
-            attributeList.add("ATTR_RESERVED");
-        }
-        if ((attributes & 0x40) == 0x40) {
-            attributeList.add("ATTR_RESERVED");
-        }
 
         // check for archive
         if ((attributes & 0x20) == 0x20) {
