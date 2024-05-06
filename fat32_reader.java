@@ -187,7 +187,28 @@ public class fat32_reader {
     // ! get file or directory stats
 
     private static void getStats(String name) {
-        // TODO get stats
+        // check if stat is for root
+        if (currentLocationByte == root && (name.equals(".") || name.equals(".."))) {
+            System.out.println("Size is 0");
+            System.out.println("Attributes ATTR_DIRECTORY");
+            System.out.println("Next cluster number is 0x00000000");
+            return;
+        }
+
+        // get the entries in the current directory
+        List<String> entries = getEntries();
+
+        // check if the name is in the entries
+        if (!entries.contains(name)) {
+            System.out.println("Error: file/directory does not exist");
+            return;
+        }
+
+        // get the entry of the name
+        long entry = entryMap.get(name);
+
+        // print the stats of the entry
+        printStatOfEntry(entry);
     }
 
     // ! get file size
@@ -630,5 +651,107 @@ public class fat32_reader {
             // print the hex value
             System.out.print(Integer.toHexString(val).toUpperCase()); // TODO can tohexstring be used in final
         }
+    }
+
+    private static void printStatOfEntry(long entryAddress) {
+        // keep track of entry size
+        int size = 0;
+
+        // keep track of entry attributes
+        int attributes = 0;
+
+        // keep track of next cluster number
+        long nextCluster = getFirstCluster(entryAddress);
+
+        // get the stats for the entry
+        try {
+            // get the location of the entry size
+            fs.seek(entryAddress + 28);
+            size = Integer.reverseBytes(fs.readInt());
+
+            // get the attributes of the entry
+            fs.seek(entryAddress + 11);
+            attributes = fs.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // get the attributes list
+        List<String> attributeList = extractAttributes(attributes);
+
+        // print the size
+        System.out.println("Size is " + size);
+
+        // print the attributes
+        System.out.print("Attributes ");
+
+        // check for no attributes
+        if (attributeList.isEmpty()) {
+            System.out.println("NONE");
+        } else {
+            // print the attributes
+            for (int i = 0; i < attributeList.size(); i++) {
+                // print the attribute
+                System.out.print(attributeList.get(i));
+
+                // print a space if not the last attribute
+                if (i < attributeList.size() - 1) {
+                    System.out.print(" ");
+                } else {
+                    System.out.println();
+                }
+            }
+        }
+
+        // format the next cluster
+        String nextClusterString = String.format("0x%08X", nextCluster);
+
+        // print the next cluster
+        System.out.println("Next cluster number is " + nextClusterString);
+    }
+
+    private static List<String> extractAttributes(int attributes) {
+        // make a list for the attributes
+        List<String> attributeList = new ArrayList<String>();
+
+        // check for reserved bits
+        if ((attributes & 0x80) == 0x80) {
+            attributeList.add("ATTR_RESERVED");
+        }
+        if ((attributes & 0x40) == 0x40) {
+            attributeList.add("ATTR_RESERVED");
+        }
+
+        // check for archive
+        if ((attributes & 0x20) == 0x20) {
+            attributeList.add("ATTR_ARCHIVE");
+        }
+
+        // check for directory
+        if ((attributes & 0x10) == 0x10) {
+            attributeList.add("ATTR_DIRECTORY");
+        }
+
+        // check for volume ID
+        if ((attributes & 0x08) == 0x08) {
+            attributeList.add("ATTR_VOLUME_ID");
+        }
+
+        // check for system file
+        if ((attributes & 0x04) == 0x04) {
+            attributeList.add("ATTR_SYSTEM");
+        }
+
+        // check for hidden
+        if ((attributes & 0x02) == 0x02) {
+            attributeList.add("ATTR_HIDDEN");
+        }
+
+        // check for read only
+        if ((attributes & 0x01) == 0x01) {
+            attributeList.add("ATTR_READ_ONLY");
+        }
+
+        return attributeList;
     }
 }
