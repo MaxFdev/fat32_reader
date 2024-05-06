@@ -47,11 +47,11 @@ public class fat32_reader {
 
     // TODO switch all to longs to avoid overflow
 
-    private static int BPB_BytesPerSec;
-    private static int BPB_SecPerClus;
-    private static int BPB_RsvdSecCnt;
-    private static int BPB_NumFATS;
-    private static int BPB_FATSz32;
+    private static long BPB_BytesPerSec;
+    private static long BPB_SecPerClus;
+    private static long BPB_RsvdSecCnt;
+    private static long BPB_NumFATS;
+    private static long BPB_FATSz32;
 
     private static void saveSpecs() {
         // try to seek and find the fs specs
@@ -78,8 +78,8 @@ public class fat32_reader {
 
     // ! navigate to root cluster
 
-    private static int BPB_RootClus;
-    private static int dataRegOffset;
+    private static long BPB_RootClus;
+    private static long dataRegOffset;
     private static long FATstart;
     private static long root;
     private static long currentLocationByte;
@@ -90,7 +90,7 @@ public class fat32_reader {
         try {
             // seek and read data
             fs.seek(44);
-            BPB_RootClus = Integer.reverseBytes(fs.readInt());
+            BPB_RootClus = fs.read() | (fs.read() << 8) | (fs.read() << 16) | (fs.read() << 24);
 
             // set the working directory to root
             workingDirectory = "/";
@@ -152,16 +152,16 @@ public class fat32_reader {
     // ! print info
 
     private static void printInfo() {
-        System.out.println("BPB_BytesPerSec is 0x" + Integer.toHexString(BPB_BytesPerSec) + ", "
+        System.out.println("BPB_BytesPerSec is 0x" + Long.toHexString(BPB_BytesPerSec) + ", "
                 + BPB_BytesPerSec);
-        System.out.println("BPB_SecPerClus is 0x" + Integer.toHexString(BPB_SecPerClus) + ", "
+        System.out.println("BPB_SecPerClus is 0x" + Long.toHexString(BPB_SecPerClus) + ", "
                 + BPB_SecPerClus);
-        System.out.println("BPB_RsvdSecCnt is 0x" + Integer.toHexString(BPB_RsvdSecCnt) + ", "
+        System.out.println("BPB_RsvdSecCnt is 0x" + Long.toHexString(BPB_RsvdSecCnt) + ", "
                 + BPB_RsvdSecCnt);
         System.out.println(
-                "BPB_NumFATs is 0x" + Integer.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
+                "BPB_NumFATs is 0x" + Long.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
         System.out.println(
-                "BPB_FATSz32 is 0x" + Integer.toHexString(BPB_FATSz32) + ", " + BPB_FATSz32);
+                "BPB_FATSz32 is 0x" + Long.toHexString(BPB_FATSz32) + ", " + BPB_FATSz32);
     }
 
     // ! list directory
@@ -350,7 +350,7 @@ public class fat32_reader {
         // read the entries
         try {
             // find the entry limit based on cluster size
-            int entryLimit = BPB_BytesPerSec * BPB_SecPerClus / 32;
+            long entryLimit = BPB_BytesPerSec * BPB_SecPerClus / 32;
 
             // keep track of the cluster being traversed
             long currentCluster = currentLocationByte;
@@ -608,7 +608,7 @@ public class fat32_reader {
             // check if the number of bytes read is less than the number of bytes requested
             while (bytesRead < numBytes) {
                 // get the number of bytes to read
-                int bytesToRead = Math.min(numBytes - bytesRead,
+                long bytesToRead = Math.min(numBytes - bytesRead,
                         BPB_SecPerClus * BPB_BytesPerSec - offset);
 
                 // navigate to the current cluster
