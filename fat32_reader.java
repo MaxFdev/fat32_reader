@@ -258,7 +258,47 @@ public class fat32_reader {
     // ! read file
 
     private static void readFile(String args) {
-        // TODO read file
+        // break up the args
+        String[] splitArgs = args.split(" ");
+
+        // get the entries in the current directory
+        List<String> entries = getEntries();
+
+        // check that the first arg is a file
+        if (!entries.contains(splitArgs[0]) || isDir(entryMap.get(splitArgs[0]))) {
+            System.out.println("Error: " + splitArgs[0] + " is not a file");
+            return;
+        }
+
+        // get the offset
+        int offset = Integer.parseInt(splitArgs[1]);
+
+        // get the number of bytes
+        int numBytes = Integer.parseInt(splitArgs[2]);
+
+        // check the offset
+        if (offset < 0) {
+            System.out.println("Error: OFFSET must be a positive value");
+            return;
+        }
+
+        // check the number of bytes
+        if (numBytes <= 0) {
+            System.out.println("Error: NUM_BYTES must be greater than zero");
+            return;
+        }
+
+        // get the size of the file
+        int size = getSizeOfFile(splitArgs[0]);
+
+        // check that the offset and number of bytes are less than the size
+        if (offset + numBytes > size) {
+            System.out.println("Error: attempt to read data outside of file bounds");
+            return;
+        }
+
+        // read the file
+        readFile(splitArgs[0], offset, numBytes);
     }
 
     // ! helper methods
@@ -282,10 +322,10 @@ public class fat32_reader {
         try {
             // find the entry limit based on cluster size
             int entryLimit = BPB_BytesPerSec * BPB_SecPerClus / 32;
-            
+
             // keep track of the cluster being traversed
             long currentCluster = currentLocationByte;
-            
+
             // keep track if there are more clusters
             boolean moreClusters = true;
 
@@ -294,7 +334,7 @@ public class fat32_reader {
                 // get the starting byte
                 fs.seek(currentCluster);
                 int startByte = fs.read();
-    
+
                 // get the attribute byte
                 fs.seek(currentCluster + 11);
                 int attributeByte = fs.read();
@@ -500,6 +540,96 @@ public class fat32_reader {
             } else {
                 workingDirectory += "/" + dir;
             }
+        }
+    }
+
+    private static void readFile(String name, int offset, int numBytes) {
+        // get the first cluster of the file
+        long fileEntry = entryMap.get(name);
+
+        // get the location of the data cluster
+        long firstCluster = getFirstCluster(fileEntry);
+
+        // get the byte address of the first cluster
+        long currentCluster = getByteAddressOfNextCluster(firstCluster);
+
+        // if offset is greater then the cluster size then move to the right cluster
+        while (offset >= BPB_SecPerClus * BPB_BytesPerSec) {
+            // get the next cluster
+            long FATEntry = checkFATForNext(currentCluster);
+
+            // check if the FAT entry is valid
+            if (FATEntry >= 0x0FFFFFF8) {
+                System.out.println("Error: attempt to read data outside of file bounds");
+                return;
+            }
+
+            // get the next cluster byte
+            currentCluster = getByteAddressOfNextCluster(FATEntry);
+
+            // decrement the offset
+            offset -= BPB_SecPerClus * BPB_BytesPerSec;
+        }
+
+        // read the file
+        try {
+            // keep track of the number of bytes read
+            int bytesRead = 0;
+
+            // check if the number of bytes read is less than the number of bytes requested
+            while (bytesRead < numBytes) {
+                // get the number of bytes to read
+                int bytesToRead = Math.min(numBytes - bytesRead,
+                        BPB_SecPerClus * BPB_BytesPerSec - offset);
+
+                // navigate to the current cluster
+                fs.seek(currentCluster + offset);
+
+                // read and print each byte
+                for (int i = 0; i < bytesToRead; i++) {
+                    printByte(fs.read());
+                }
+
+                // increment the bytes read
+                bytesRead += bytesToRead;
+
+                // get the next cluster
+                long FATEntry = checkFATForNext(currentCluster);
+
+                // check if the FAT entry is valid
+                if (FATEntry >= 0x0FFFFFF8) {
+                    break;
+                }
+
+                // get the next cluster byte
+                currentCluster = getByteAddressOfNextCluster(FATEntry);
+
+                // reset the offset
+                offset = 0;
+            }
+
+            // print a new line
+            System.out.println();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printByte(int val) {
+        // check that the val is between 7 and 13 or 32 and 126
+        if ((val >= 7 && val <= 13) || (val >= 32 && val <= 126)) {
+            System.out.print((char) val);
+        } else {
+            // print the leading 0x
+            System.out.print("0x");
+
+            // check if the hex value needs a leading 0 to keep 2 digits
+            if (val < 16) {
+                System.out.print("0");
+            }
+
+            // print the hex value
+            System.out.print(Integer.toHexString(val)); // TODO can tohexstring be used in final
         }
     }
 }
