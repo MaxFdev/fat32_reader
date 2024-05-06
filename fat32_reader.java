@@ -132,7 +132,6 @@ public class fat32_reader {
             } else if (input.equals("LS")) {
                 listDirectory();
             } else if (input.startsWith("STAT ")) {
-                // TODO does the substring work?
                 getStats(input.substring(input.indexOf(" ") + 1));
             } else if (input.startsWith("SIZE ")) {
                 getSize(input.substring(input.indexOf(" ") + 1));
@@ -629,7 +628,7 @@ public class fat32_reader {
             }
 
             // print the hex value
-            System.out.print(Integer.toHexString(val)); // TODO can tohexstring be used in final
+            System.out.print(Integer.toHexString(val).toUpperCase()); // TODO can tohexstring be used in final
         }
     }
 }
