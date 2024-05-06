@@ -140,7 +140,6 @@ public class fat32_reader {
             } else if (input.startsWith("READ ")) {
                 readFile(input.substring(input.indexOf(" ") + 1));
             } else if (!input.isBlank()) {
-                // TODO what to print for errors
                 System.out.println("Invalid command!");
             }
         }
@@ -290,11 +289,20 @@ public class fat32_reader {
             return;
         }
 
-        // get the offset
-        int offset = Integer.parseInt(splitArgs[1]);
+        // initialize the offset and number of bytes
+        int offset = 0;
+        int numBytes = 0;
 
-        // get the number of bytes
-        int numBytes = Integer.parseInt(splitArgs[2]);
+        try {
+            // get the offset
+            offset = Integer.parseInt(splitArgs[1]);
+    
+            // get the number of bytes
+            numBytes = Integer.parseInt(splitArgs[2]);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return;
+        }
 
         // check the offset
         if (offset < 0) {
