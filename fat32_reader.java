@@ -45,6 +45,8 @@ public class fat32_reader {
 
     // ! file system specifications
 
+    // TODO switch all to longs to avoid overflow
+
     private static int BPB_BytesPerSec;
     private static int BPB_SecPerClus;
     private static int BPB_RsvdSecCnt;
@@ -56,14 +58,13 @@ public class fat32_reader {
         try {
             // seek and read data
             fs.seek(11);
-            // TODO switch to custom byte reading method
-            BPB_BytesPerSec = Short.reverseBytes(fs.readShort());
+            BPB_BytesPerSec = fs.read() | (fs.read() << 8);
             BPB_SecPerClus = fs.read();
             fs.seek(14);
-            BPB_RsvdSecCnt = Short.reverseBytes(fs.readShort());
+            BPB_RsvdSecCnt = fs.read() | (fs.read() << 8);
             BPB_NumFATS = fs.read();
             fs.seek(36);
-            BPB_FATSz32 = Integer.reverseBytes(fs.readInt());
+            BPB_FATSz32 = fs.read() | (fs.read() << 8) | (fs.read() << 16) | (fs.read() << 24);
 
             // navigate to root cluster
             navigateRoot();
