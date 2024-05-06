@@ -158,7 +158,7 @@ public class fat32_reader {
         System.out.println("BPB_RsvdSecCnt is 0x" + Integer.toHexString(BPB_RsvdSecCnt) + ", "
                 + BPB_RsvdSecCnt);
         System.out.println(
-                "BPB_NumFATS is 0x" + Integer.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
+                "BPB_NumFATs is 0x" + Integer.toHexString(BPB_NumFATS) + ", " + BPB_NumFATS);
         System.out.println(
                 "BPB_FATSz32 is 0x" + Integer.toHexString(BPB_FATSz32) + ", " + BPB_FATSz32);
     }
