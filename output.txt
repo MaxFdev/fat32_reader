@@ -22,7 +22,7 @@ have the Qualifications requisite for Electors of t
 /] BPB_BytesPerSec is 0x200, 512
 BPB_SecPerClus is 0x1, 1
 BPB_RsvdSecCnt is 0x20, 32
-BPB_NumFATS is 0x2, 2
+BPB_NumFATs is 0x2, 2
 BPB_FATSz32 is 0x3f1, 1009
 /] /DIR] . .. A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 /DIR] /DIR/A] . .. SPEC
