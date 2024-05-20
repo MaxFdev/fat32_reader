@@ -2,9 +2,9 @@
 
 ### Description:
 
-This was a school project made to navigate through a FAT32 file system.
-It effectively is a small shell that is able to read a FAT32 .img file.
-The shell is able to understand list directory content, navigate through the file system, and read file content.
+This was a school project made to navigate through a FAT32 file system.  
+It effectively is a small shell that is able to read a FAT32 .img file.  
+The shell is able to understand list directory content, navigate through the file system, and read file content.  
 
 ---
 
