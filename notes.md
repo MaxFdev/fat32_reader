@@ -61,7 +61,7 @@ are characters in those last three bytes.
 - ~~stop~~
 - ~~info~~
 - ~~ls~~
-- stat
+- ~~stat~~
 - ~~size~~
 - ~~cd~~
 - ~~read~~
