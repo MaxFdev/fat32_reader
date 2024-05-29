@@ -17,7 +17,7 @@ The shell is able to understand list directory content, navigate through the fil
     ```
 2. Utilize the following built-in commands:
     - `stop`: This command is used to terminate the program.
-    - `info`: This command returns the information about the current directory, irrespective of the directory from which it is called.
+    - `info`: This command returns the information about the file system.
     - `ls`: This command mimics the Linux "ls -a" command. It lists all items in the current directory, including "..", ".", and hidden folders. The items are displayed in alphabetical order.
     - `stat` {file/dir}: This command prints the size, attributes, and next cluster for a specified file or directory in the current working directory. If no attribute is found, it prints 'none'. If the specified file or directory does not exist, it prints an error.
     - `size` {file}: This command prints the size of a specified file in bytes. If the file does not exist or if a directory is specified, it prints an error.
