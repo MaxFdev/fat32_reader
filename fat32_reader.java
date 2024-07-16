@@ -45,8 +45,6 @@ public class fat32_reader {
 
     // ! file system specifications
 
-    // TODO switch all to longs to avoid overflow
-
     private static long BPB_BytesPerSec;
     private static long BPB_SecPerClus;
     private static long BPB_RsvdSecCnt;

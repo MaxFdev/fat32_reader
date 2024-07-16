@@ -53,15 +53,3 @@ Libraries: you may use java libraries that act on individual bytes, but not libr
 
 File name storage: For filenames in FAT32, the first 8 bytes, filled in from left to right, contain the up-to-eight characters of the name before the period. The next three bytes, filled in from left to right, contain the up-to-three characters of the name after the period. When your shell prints a filename to the screen, the period between the filename and extension, not stored in the name field, is rendered to the screen only if there
 are characters in those last three bytes.
-
-----------
-
-### TODO
-
-- ~~stop~~
-- ~~info~~
-- ~~ls~~
-- ~~stat~~
-- ~~size~~
-- ~~cd~~
-- ~~read~~
